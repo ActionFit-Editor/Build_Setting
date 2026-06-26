@@ -1,0 +1,24 @@
+{
+    "name": "com.actionfit.buildsetting.Editor",
+    "rootNamespace": "ActionFit.BuildSetting.Editor",
+    "references": [
+        "Unity.Addressables.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.actionfit.customsymbols",
+            "expression": "1.0.0",
+            "define": "ACTIONFIT_CUSTOM_SYMBOLS"
+        }
+    ],
+    "noEngineReferences": false
+}
