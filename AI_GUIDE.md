@@ -7,7 +7,7 @@ This file is shipped inside the UPM package so an AI assistant in a consuming Un
 - Package ID: `com.actionfit.buildsetting`
 - Display name: Build Setting
 - Repository: `https://github.com/ActionFit-Editor/Build_Setting.git`
-- Current package version at generation time: `1.1.0`
+- Current package version at generation time: `1.1.1`
 - Unity version: `6000.2`
 
 ## Purpose
@@ -51,6 +51,7 @@ Read this file when:
 
 - Main menu: `Tools/ActionFit/Build Setting`.
 - This package stores Android/iOS build settings in `BuildSettingsSO`.
+- `BuildSettingsSO` also stores temporary BuildCommit request override fields for Google Play service account JSON and App Store Connect API key id, issuer id, and P8.
 - It applies settings to Unity `PlayerSettings` and build execution.
 - Firebase config file lookup should search inside `Assets`.
 - Build Setting does not create automatic build requests by itself. BuildCommit, request JSON, Git tag CI triggers, workflow templates, and runner guidance live in `com.actionfit.buildautomation`.

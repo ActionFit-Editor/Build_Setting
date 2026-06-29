@@ -57,6 +57,12 @@ namespace ActionFit.BuildSetting.Editor
         public List<string> defineSymbol = new(); // 추가 심볼
         public bool manageSymbolsOnBuild = true; // 빌드 시 심볼 관리 (CustomSymbols 패키지 설치 시)
 
+        // BuildCommit experimental request overrides
+        [TextArea(3, 10)] public string buildCommitGooglePlayServiceAccountJson = ""; // BuildCommit Google Play service account JSON override
+        public string buildCommitAppStoreConnectApiKeyId = ""; // BuildCommit App Store Connect API key ID override
+        public string buildCommitAppStoreConnectIssuerId = ""; // BuildCommit App Store Connect issuer ID override
+        [TextArea(3, 10)] public string buildCommitAppStoreConnectApiKeyP8 = ""; // BuildCommit App Store Connect private key override
+
 #if UNITY_EDITOR
         public static BuildSettingsSO FindSettingsAsset()
         {
