@@ -7,22 +7,24 @@ Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSett
 ```json
 {
   "dependencies": {
-    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.1"
+    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.2"
   }
 }
 ```
 
 ## 구성
 
-- 메뉴: `Tools > ActionFit > Build Setting`
+- 설정 창 메뉴: `Tools > ActionFit > BuildSetting > SettingWindow`
+- 설정 SO 포커싱 메뉴: `Tools > ActionFit > BuildSetting > SO포커싱 기능`
 - 설정 에셋: `BuildSettingsSO`
-- 패키지에는 설정 에셋을 저장하지 않습니다. 각 프로젝트의 `Assets` 폴더 아래에 `Create New`로 생성해서 사용합니다.
+- 패키지에는 설정 에셋을 저장하지 않습니다. 기존 `BuildSettingsSO`가 있으면 자동으로 찾아서 창 필드에 배정하고, 없으면 `Assets/_Data/_BuildSetting/BuildSettingsSO.asset`을 자동 생성합니다.
+- 처음 자동 생성되는 `BuildSettingsSO`는 현재 프로젝트의 `PlayerSettings`에서 company name, product name, bundle version, Android/iOS application identifier, bundle number 같은 기본값을 1차 초기화로 가져옵니다.
 
 ## 자동 빌드 연동
 
 BuildCommit, `.build/build_request.json`, Git tag 기반 CI 트리거, GitHub Actions workflow template, macOS self-hosted runner 가이드는 `com.actionfit.buildautomation` 패키지로 분리되었습니다.
 
-자동 빌드를 사용하려면 Build Setting과 함께 Build Automation을 설치합니다. Build Setting은 `BuildSettingsSO`, Android/iOS PlayerSettings 적용, 로컬 빌드 실행 API를 제공하고, Build Automation은 원격 빌드 요청과 CI workflow를 담당합니다.
+자동 빌드를 사용하려면 Build Setting과 함께 Build Automation을 설치합니다. Build Setting은 `BuildSettingsSO`, Android/iOS PlayerSettings 적용, 로컬 빌드 실행 API를 제공하고, Build Automation은 `Tools > ActionFit > BuildSetting > AutoBuild`에서 원격 빌드 요청과 CI workflow를 담당합니다.
 
 `BuildSettingsSO`에는 BuildCommit 실험용 request override 값도 저장할 수 있습니다. Google Play service account JSON, App Store Connect API key id, issuer id, P8 값을 BuildCommit 창에서 입력하면 같은 SO에 임시 저장됩니다.
 

@@ -7,7 +7,7 @@ This file is shipped inside the UPM package so an AI assistant in a consuming Un
 - Package ID: `com.actionfit.buildsetting`
 - Display name: Build Setting
 - Repository: `https://github.com/ActionFit-Editor/Build_Setting.git`
-- Current package version at generation time: `1.1.1`
+- Current package version at generation time: `1.1.2`
 - Unity version: `6000.2`
 
 ## Purpose
@@ -49,8 +49,11 @@ Read this file when:
 
 ## Menu And Behavior Notes
 
-- Main menu: `Tools/ActionFit/Build Setting`.
+- Setting window menu: `Tools/ActionFit/BuildSetting/SettingWindow`.
+- SO focus menu: `Tools/ActionFit/BuildSetting/SO포커싱 기능`.
 - This package stores Android/iOS build settings in `BuildSettingsSO`.
+- `BuildSettingsSO.FindOrCreateSettingsAsset()` should find the last-used or first project asset, and create `Assets/_Data/_BuildSetting/BuildSettingsSO.asset` only when none exists.
+- The first auto-created `BuildSettingsSO` should initialize user-editable identity/version fields from current `PlayerSettings` values without overwriting existing assets.
 - `BuildSettingsSO` also stores temporary BuildCommit request override fields for Google Play service account JSON and App Store Connect API key id, issuer id, and P8.
 - It applies settings to Unity `PlayerSettings` and build execution.
 - Firebase config file lookup should search inside `Assets`.

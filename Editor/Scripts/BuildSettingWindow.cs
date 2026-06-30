@@ -18,6 +18,9 @@ namespace ActionFit.BuildSetting.Editor
     {
         #region Fields
 
+        public const string SOPrefsKey = "LastUsedBuildSettings";
+        public const string DefaultSettingsAssetPath = "Assets/_Data/_BuildSetting/BuildSettingsSO.asset";
+
         // Android
         public string buildFileName = "[Enter Build File Name]"; // 빌드 파일명
         public string androidBuildPath = "[Enter Android Build Path]"; // Android 빌드 경로
@@ -66,18 +69,109 @@ namespace ActionFit.BuildSetting.Editor
 #if UNITY_EDITOR
         public static BuildSettingsSO FindSettingsAsset()
         {
-            string lastUsedPath = EditorPrefs.GetString(BuildSettingsWindow.SOPrefsKey, "");
-            if (!string.IsNullOrEmpty(lastUsedPath))
-            {
-                var saved = AssetDatabase.LoadAssetAtPath<BuildSettingsSO>(lastUsedPath);
-                if (saved != null) return saved;
-            }
+            var saved = LoadAndRemember(EditorPrefs.GetString(SOPrefsKey, ""));
+            if (saved != null) return saved;
+
+            var defaultSettings = LoadAndRemember(DefaultSettingsAssetPath);
+            if (defaultSettings != null) return defaultSettings;
 
             string[] guids = AssetDatabase.FindAssets("t:BuildSettingsSO");
             if (guids.Length == 0) return null;
 
-            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            return AssetDatabase.LoadAssetAtPath<BuildSettingsSO>(path);
+            string path = guids
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .OrderBy(p => p.StartsWith("Assets/", StringComparison.Ordinal) ? 0 : 1)
+                .ThenBy(p => p, StringComparer.Ordinal)
+                .FirstOrDefault();
+            return LoadAndRemember(path);
+        }
+
+        public static BuildSettingsSO FindOrCreateSettingsAsset()
+        {
+            var settings = FindSettingsAsset();
+            if (settings != null) return settings;
+
+            EnsureFolder(Path.GetDirectoryName(DefaultSettingsAssetPath)?.Replace("\\", "/"));
+
+            settings = CreateInstance<BuildSettingsSO>();
+            settings.InitializeFromProjectSettings();
+            AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
+            EditorPrefs.SetString(SOPrefsKey, DefaultSettingsAssetPath);
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"[BuildSetting] BuildSettingsSO created: {DefaultSettingsAssetPath}");
+            return settings;
+        }
+
+        public void InitializeFromProjectSettings()
+        {
+            string playerCompanyName = PlayerSettings.companyName;
+            if (!string.IsNullOrWhiteSpace(playerCompanyName))
+                companyName = playerCompanyName;
+
+            string playerProductName = PlayerSettings.productName;
+            if (!string.IsNullOrWhiteSpace(playerProductName))
+            {
+                productName = playerProductName;
+                buildFileName = SanitizeFileName(playerProductName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(PlayerSettings.bundleVersion))
+                buildVersion = PlayerSettings.bundleVersion;
+
+            string androidId = PlayerSettings.GetApplicationIdentifier(BuildTargetGroup.Android);
+            if (!string.IsNullOrWhiteSpace(androidId))
+                androidPackageName = androidId;
+
+            string iosId = PlayerSettings.GetApplicationIdentifier(BuildTargetGroup.iOS);
+            if (!string.IsNullOrWhiteSpace(iosId))
+                iosPackageName = iosId;
+
+#if UNITY_ANDROID
+            int androidBundleCode = PlayerSettings.Android.bundleVersionCode;
+            if (androidBundleCode > 0)
+                bundleNo = androidBundleCode.ToString();
+#elif UNITY_IOS
+            if (!string.IsNullOrWhiteSpace(PlayerSettings.iOS.buildNumber))
+                bundleNo = PlayerSettings.iOS.buildNumber;
+            if (!string.IsNullOrWhiteSpace(PlayerSettings.iOS.appleDeveloperTeamID))
+                developmentTeamId = PlayerSettings.iOS.appleDeveloperTeamID;
+#endif
+        }
+
+        private static BuildSettingsSO LoadAndRemember(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return null;
+
+            var settings = AssetDatabase.LoadAssetAtPath<BuildSettingsSO>(path);
+            if (settings != null)
+                EditorPrefs.SetString(SOPrefsKey, path);
+            return settings;
+        }
+
+        private static void EnsureFolder(string folder)
+        {
+            if (string.IsNullOrWhiteSpace(folder) || AssetDatabase.IsValidFolder(folder)) return;
+
+            string parent = Path.GetDirectoryName(folder)?.Replace("\\", "/");
+            if (!string.IsNullOrWhiteSpace(parent))
+                EnsureFolder(parent);
+
+            AssetDatabase.CreateFolder(parent, Path.GetFileName(folder));
+        }
+
+        private static string SanitizeFileName(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return "Build";
+
+            var invalid = Path.GetInvalidFileNameChars();
+            var chars = value.Trim()
+                .Select(c => invalid.Contains(c) ? '_' : c)
+                .ToArray();
+            string sanitized = new string(chars).Trim('_', ' ');
+            return string.IsNullOrWhiteSpace(sanitized) ? "Build" : sanitized;
         }
 #endif
 
@@ -88,7 +182,7 @@ namespace ActionFit.BuildSetting.Editor
     {
         #region Fields
 
-        internal const string SOPrefsKey = "LastUsedBuildSettings";
+        internal const string SOPrefsKey = BuildSettingsSO.SOPrefsKey;
 
         [SerializeField] private BuildSettingsSO settings;
         private Vector2 _scrollPosition = Vector2.zero;
@@ -98,17 +192,26 @@ namespace ActionFit.BuildSetting.Editor
 
         #region Window
 
-        [MenuItem("Tools/ActionFit/Build Setting", false, 20)]
+        [MenuItem("Tools/ActionFit/BuildSetting/SettingWindow", false, 20)]
         public static void ShowWindow()
         {
             BuildSettingsWindow window = GetWindow<BuildSettingsWindow>("Build Settings");
             window.Show();
         }
 
+        [MenuItem("Tools/ActionFit/BuildSetting/SO포커싱 기능", false, 19)]
+        public static void FocusSettingsAsset()
+        {
+            var asset = BuildSettingsSO.FindOrCreateSettingsAsset();
+            Selection.activeObject = asset;
+            EditorGUIUtility.PingObject(asset);
+            EditorUtility.FocusProjectWindow();
+        }
+
         private void OnEnable()
         {
             _scrollPosition = Vector2.zero;
-            settings = BuildSettingsSO.FindSettingsAsset();
+            settings = BuildSettingsSO.FindOrCreateSettingsAsset();
             if (settings != null)
             {
                 _serializedSettings = new SerializedObject(settings);
@@ -159,10 +262,17 @@ namespace ActionFit.BuildSetting.Editor
                 false
             );
 
-            if (EditorGUI.EndChangeCheck() && settings != null)
+            if (EditorGUI.EndChangeCheck())
             {
-                _serializedSettings = new SerializedObject(settings);
-                EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
+                if (settings != null)
+                {
+                    _serializedSettings = new SerializedObject(settings);
+                    EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
+                }
+                else
+                {
+                    _serializedSettings = null;
+                }
             }
 
             if (GUILayout.Button("Create New", GUILayout.Width(80)))
@@ -177,6 +287,7 @@ namespace ActionFit.BuildSetting.Editor
                 if (!string.IsNullOrEmpty(path))
                 {
                     var newSettings = CreateInstance<BuildSettingsSO>();
+                    newSettings.InitializeFromProjectSettings();
                     AssetDatabase.CreateAsset(newSettings, path);
                     AssetDatabase.SaveAssets();
                     settings = newSettings;
@@ -192,10 +303,11 @@ namespace ActionFit.BuildSetting.Editor
                 EditorGUILayout.HelpBox("Please assign or create a Build Settings asset to configure build options.",
                     MessageType.Warning);
 
-                settings = BuildSettingsSO.FindSettingsAsset();
+                settings = BuildSettingsSO.FindOrCreateSettingsAsset();
                 if (settings != null)
                 {
                     _serializedSettings = new SerializedObject(settings);
+                    EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
                 }
 
                 return;
