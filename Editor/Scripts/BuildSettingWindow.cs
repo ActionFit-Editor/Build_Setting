@@ -53,6 +53,7 @@ namespace ActionFit.BuildSetting.Editor
         public List<string> removeFrameworks = new(); // UnityFramework에서 제거할 라이브러리 목록
 
         // Common
+        public ActionFitBuildSetting_SO actionFitBuildSetting; // 회사/Team ID 기본 세팅
         public string companyName = "[Enter Company Name]"; // 회사명
         public string productName = "[Enter Product Name]"; // 앱 이름
         public bool saveFileInProject = false; // 프로젝트 내 Builds 폴더에 저장
@@ -109,6 +110,8 @@ namespace ActionFit.BuildSetting.Editor
 
         public void InitializeFromProjectSettings()
         {
+            EnsureActionFitBuildSetting();
+
             string playerCompanyName = PlayerSettings.companyName;
             if (!string.IsNullOrWhiteSpace(playerCompanyName))
                 companyName = playerCompanyName;
@@ -143,11 +146,53 @@ namespace ActionFit.BuildSetting.Editor
             if (!string.IsNullOrWhiteSpace(PlayerSettings.iOS.targetOSVersionString))
                 iosTargetOSVersion = PlayerSettings.iOS.targetOSVersionString;
 #endif
+            SyncDevelopmentTeamIdFromCompanyProfile();
         }
 
         public string GetResolvedIosTargetOSVersion()
         {
             return ResolveIosTargetOSVersion(iosTargetOSVersion);
+        }
+
+        public bool EnsureActionFitBuildSetting()
+        {
+            bool changed = false;
+            if (actionFitBuildSetting == null)
+            {
+                actionFitBuildSetting = ActionFitBuildSetting_SO.FindOrCreateSettingsAsset();
+                changed = actionFitBuildSetting != null;
+            }
+
+            if (actionFitBuildSetting == null) return changed;
+            if (!actionFitBuildSetting.EnsureDefaultProfiles()) return changed;
+
+            EditorUtility.SetDirty(actionFitBuildSetting);
+            AssetDatabase.SaveAssets();
+            return changed;
+        }
+
+        public string GetResolvedCompanyName()
+        {
+            return string.IsNullOrWhiteSpace(companyName) ? "" : companyName.Trim();
+        }
+
+        public string GetResolvedDevelopmentTeamId()
+        {
+            if (actionFitBuildSetting != null &&
+                actionFitBuildSetting.TryGetDevelopmentTeamId(companyName, out string matchedTeamId))
+                return matchedTeamId;
+
+            return string.IsNullOrWhiteSpace(developmentTeamId) ? "" : developmentTeamId.Trim();
+        }
+
+        public bool SyncDevelopmentTeamIdFromCompanyProfile()
+        {
+            if (actionFitBuildSetting == null) return false;
+            if (!actionFitBuildSetting.TryGetDevelopmentTeamId(companyName, out string matchedTeamId)) return false;
+            if (string.Equals(developmentTeamId, matchedTeamId, StringComparison.Ordinal)) return false;
+
+            developmentTeamId = matchedTeamId;
+            return true;
         }
 
         public static string ResolveIosTargetOSVersion(string value)
@@ -161,7 +206,16 @@ namespace ActionFit.BuildSetting.Editor
 
             var settings = AssetDatabase.LoadAssetAtPath<BuildSettingsSO>(path);
             if (settings != null)
+            {
                 EditorPrefs.SetString(SOPrefsKey, path);
+                bool changed = settings.EnsureActionFitBuildSetting();
+                changed |= settings.SyncDevelopmentTeamIdFromCompanyProfile();
+                if (changed)
+                {
+                    EditorUtility.SetDirty(settings);
+                    AssetDatabase.SaveAssets();
+                }
+            }
             return settings;
         }
 
@@ -228,6 +282,7 @@ namespace ActionFit.BuildSetting.Editor
             settings = BuildSettingsSO.FindOrCreateSettingsAsset();
             if (settings != null)
             {
+                EnsureActionFitBuildSettingReference();
                 _serializedSettings = new SerializedObject(settings);
                 EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
                 AutoSearchPackageNameOnEnable();
@@ -280,6 +335,7 @@ namespace ActionFit.BuildSetting.Editor
             {
                 if (settings != null)
                 {
+                    EnsureActionFitBuildSettingReference();
                     _serializedSettings = new SerializedObject(settings);
                     EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
                 }
@@ -305,6 +361,7 @@ namespace ActionFit.BuildSetting.Editor
                     AssetDatabase.CreateAsset(newSettings, path);
                     AssetDatabase.SaveAssets();
                     settings = newSettings;
+                    EnsureActionFitBuildSettingReference();
                     _serializedSettings = new SerializedObject(settings);
                     EditorPrefs.SetString(SOPrefsKey, path);
                 }
@@ -320,6 +377,7 @@ namespace ActionFit.BuildSetting.Editor
                 settings = BuildSettingsSO.FindOrCreateSettingsAsset();
                 if (settings != null)
                 {
+                    EnsureActionFitBuildSettingReference();
                     _serializedSettings = new SerializedObject(settings);
                     EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
                 }
@@ -366,9 +424,71 @@ namespace ActionFit.BuildSetting.Editor
 #if UNITY_ANDROID
             EditorGUILayout.PropertyField(_serializedSettings.FindProperty("buildFileName"));
 #endif
-            EditorGUILayout.PropertyField(_serializedSettings.FindProperty("companyName"));
+            DrawCompanySettings();
             EditorGUILayout.PropertyField(_serializedSettings.FindProperty("productName"));
             EditorGUILayout.Space(5);
+        }
+
+        private void DrawCompanySettings()
+        {
+            var buildSettingProperty = _serializedSettings.FindProperty("actionFitBuildSetting");
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PropertyField(buildSettingProperty, new GUIContent("ActionFit Build Setting"));
+            if (GUILayout.Button("Default", GUILayout.Width(70)))
+                buildSettingProperty.objectReferenceValue = ActionFitBuildSetting_SO.FindOrCreateSettingsAsset();
+            if (GUILayout.Button("Ping", GUILayout.Width(50)) && buildSettingProperty.objectReferenceValue != null)
+            {
+                Selection.activeObject = buildSettingProperty.objectReferenceValue;
+                EditorGUIUtility.PingObject(buildSettingProperty.objectReferenceValue);
+                EditorUtility.FocusProjectWindow();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            var actionFitBuildSetting = buildSettingProperty.objectReferenceValue as ActionFitBuildSetting_SO;
+            EnsureDefaultCompanyProfiles(actionFitBuildSetting);
+            DrawCompanyProfilePopup(actionFitBuildSetting);
+        }
+
+        private void DrawCompanyProfilePopup(ActionFitBuildSetting_SO actionFitBuildSetting)
+        {
+            var companyNameProperty = _serializedSettings.FindProperty("companyName");
+            var developmentTeamIdProperty = _serializedSettings.FindProperty("developmentTeamId");
+            if (actionFitBuildSetting == null)
+            {
+                EditorGUILayout.PropertyField(companyNameProperty);
+                return;
+            }
+
+            var profiles = actionFitBuildSetting.CompanyProfiles
+                .Where(profile => profile != null && !string.IsNullOrWhiteSpace(profile.companyName))
+                .ToList();
+            if (profiles.Count == 0)
+            {
+                EditorGUILayout.PropertyField(companyNameProperty);
+                return;
+            }
+
+            int matchedIndex = profiles.FindIndex(profile =>
+                string.Equals(profile.companyName?.Trim(), companyNameProperty.stringValue?.Trim(),
+                    StringComparison.OrdinalIgnoreCase));
+            int currentOptionIndex = matchedIndex >= 0 ? matchedIndex + 1 : 0;
+            string[] options = new[] { "Custom / Manual" }
+                .Concat(profiles.Select(profile => profile.companyName.Trim()))
+                .ToArray();
+
+            EditorGUI.BeginChangeCheck();
+            int selectedOptionIndex = EditorGUILayout.Popup("Company Profile", currentOptionIndex, options);
+            if (EditorGUI.EndChangeCheck() && selectedOptionIndex > 0)
+            {
+                var selectedProfile = profiles[selectedOptionIndex - 1];
+                companyNameProperty.stringValue = selectedProfile.companyName.Trim();
+                developmentTeamIdProperty.stringValue = selectedProfile.developmentTeamId?.Trim() ?? "";
+            }
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(companyNameProperty, new GUIContent("Company Name"));
+            EditorGUI.EndChangeCheck();
+            SyncSerializedDevelopmentTeamId(actionFitBuildSetting, companyNameProperty, developmentTeamIdProperty);
         }
 
         private void DrawPathSettings()
@@ -608,8 +728,7 @@ namespace ActionFit.BuildSetting.Editor
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("iOS Code Sign", EditorStyles.boldLabel);
 
-            EditorGUILayout.PropertyField(_serializedSettings.FindProperty("developmentTeamId"),
-                new GUIContent("Development Team ID"));
+            DrawDevelopmentTeamIdField();
             EditorGUILayout.PropertyField(_serializedSettings.FindProperty("iosTargetOSVersion"),
                 new GUIContent("Target iOS Version"));
 
@@ -718,6 +837,71 @@ namespace ActionFit.BuildSetting.Editor
 
         #region Build Settings
 
+        private void EnsureActionFitBuildSettingReference()
+        {
+            if (settings == null) return;
+
+            bool changed = false;
+            if (settings.actionFitBuildSetting == null)
+            {
+                settings.actionFitBuildSetting = ActionFitBuildSetting_SO.FindOrCreateSettingsAsset();
+                changed = true;
+            }
+            else
+            {
+                EnsureDefaultCompanyProfiles(settings.actionFitBuildSetting);
+            }
+
+            changed |= settings.SyncDevelopmentTeamIdFromCompanyProfile();
+            if (!changed) return;
+
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void EnsureDefaultCompanyProfiles(ActionFitBuildSetting_SO actionFitBuildSetting)
+        {
+            if (actionFitBuildSetting == null) return;
+            if (!actionFitBuildSetting.EnsureDefaultProfiles()) return;
+
+            EditorUtility.SetDirty(actionFitBuildSetting);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void SyncSerializedDevelopmentTeamId(
+            ActionFitBuildSetting_SO actionFitBuildSetting,
+            SerializedProperty companyNameProperty,
+            SerializedProperty developmentTeamIdProperty)
+        {
+            if (actionFitBuildSetting == null || companyNameProperty == null || developmentTeamIdProperty == null) return;
+            if (!actionFitBuildSetting.TryGetDevelopmentTeamId(companyNameProperty.stringValue, out string matchedTeamId)) return;
+            if (string.Equals(developmentTeamIdProperty.stringValue, matchedTeamId, StringComparison.Ordinal)) return;
+
+            developmentTeamIdProperty.stringValue = matchedTeamId;
+        }
+
+        private void DrawDevelopmentTeamIdField()
+        {
+            var actionFitBuildSetting = _serializedSettings.FindProperty("actionFitBuildSetting")
+                ?.objectReferenceValue as ActionFitBuildSetting_SO;
+            var companyNameProperty = _serializedSettings.FindProperty("companyName");
+            var developmentTeamIdProperty = _serializedSettings.FindProperty("developmentTeamId");
+
+            if (actionFitBuildSetting != null &&
+                actionFitBuildSetting.TryGetDevelopmentTeamId(companyNameProperty.stringValue, out string matchedTeamId))
+            {
+                developmentTeamIdProperty.stringValue = matchedTeamId;
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.TextField("Development Team ID", matchedTeamId);
+                EditorGUI.EndDisabledGroup();
+                EditorGUILayout.HelpBox("Development Team ID is matched from the selected Company Profile.",
+                    MessageType.Info);
+                return;
+            }
+
+            EditorGUILayout.PropertyField(developmentTeamIdProperty, new GUIContent("Development Team ID"));
+        }
+
         // SerializedObject 변경사항을 SO에 적용하고 저장
         private void ApplyAndSaveIfModified()
         {
@@ -790,7 +974,8 @@ namespace ActionFit.BuildSetting.Editor
             if (!ValidateCommonSettings()) return false;
             if (!ValidateRequired("iOS Bundle ID", settings.iosPackageName)) return false;
             if (!settings.saveFileInProject && !ValidateRequired("iOS Build Path", settings.iosBuildPath)) return false;
-            if (!ValidateRequired("Apple Team ID", settings.developmentTeamId)) return false;
+            string resolvedDevelopmentTeamId = settings.GetResolvedDevelopmentTeamId();
+            if (!ValidateRequired("Apple Team ID", resolvedDevelopmentTeamId)) return false;
             if (!ValidateRequired("Target iOS Version", settings.iosTargetOSVersion)) return false;
 
             // 패키지명 자동 탐색
@@ -859,8 +1044,9 @@ namespace ActionFit.BuildSetting.Editor
 #endif
 
             // 회사명/앱 이름 설정
-            if (!string.IsNullOrEmpty(settings.companyName))
-                PlayerSettings.companyName = settings.companyName;
+            string resolvedCompanyName = settings.GetResolvedCompanyName();
+            if (!string.IsNullOrEmpty(resolvedCompanyName))
+                PlayerSettings.companyName = resolvedCompanyName;
             if (!string.IsNullOrEmpty(settings.productName))
                 PlayerSettings.productName = settings.productName;
 
@@ -869,6 +1055,7 @@ namespace ActionFit.BuildSetting.Editor
             PlayerSettings.bundleVersion = settings.buildVersion;
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, settings.iosPackageName);
             PlayerSettings.iOS.buildNumber = settings.bundleNo;
+            PlayerSettings.iOS.appleDeveloperTeamID = resolvedDevelopmentTeamId;
             PlayerSettings.iOS.targetOSVersionString = settings.GetResolvedIosTargetOSVersion();
 
             return true;
@@ -948,8 +1135,9 @@ namespace ActionFit.BuildSetting.Editor
 #endif
 
             // 회사명/앱 이름 설정
-            if (!string.IsNullOrEmpty(settings.companyName))
-                PlayerSettings.companyName = settings.companyName;
+            string resolvedCompanyName = settings.GetResolvedCompanyName();
+            if (!string.IsNullOrEmpty(resolvedCompanyName))
+                PlayerSettings.companyName = resolvedCompanyName;
             if (!string.IsNullOrEmpty(settings.productName))
                 PlayerSettings.productName = settings.productName;
 

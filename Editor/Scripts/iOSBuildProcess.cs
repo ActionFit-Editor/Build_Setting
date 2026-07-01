@@ -251,6 +251,7 @@ namespace ActionFit.BuildSetting.Editor
             }
             if (string.IsNullOrEmpty(deviceFamily)) deviceFamily = "1,2";
             string iosTargetOSVersion = buildSetting.GetResolvedIosTargetOSVersion();
+            string developmentTeamId = buildSetting.GetResolvedDevelopmentTeamId();
 
             // 모든 타겟에 공통 빌드 설정 적용
             foreach (string targetGuid in allTargets)
@@ -265,17 +266,17 @@ namespace ActionFit.BuildSetting.Editor
                 proj.SetBuildProperty(targetGuid, "CODE_SIGN_STYLE", "Automatic");
                 proj.SetBuildProperty(targetGuid, "CODE_SIGN_IDENTITY", "Apple Development");
 
-                if (!string.IsNullOrEmpty(buildSetting.developmentTeamId))
+                if (!string.IsNullOrEmpty(developmentTeamId))
                 {
-                    proj.SetBuildProperty(targetGuid, "DEVELOPMENT_TEAM", buildSetting.developmentTeamId);
+                    proj.SetBuildProperty(targetGuid, "DEVELOPMENT_TEAM", developmentTeamId);
                 }
             }
 
             Debug.Log($"[iOSBuildProcess] Applied settings to {allTargets.Count} targets. TARGETED_DEVICE_FAMILY: {deviceFamily}, IPHONEOS_DEPLOYMENT_TARGET: {iosTargetOSVersion}");
 
-            if (!string.IsNullOrEmpty(buildSetting.developmentTeamId))
+            if (!string.IsNullOrEmpty(developmentTeamId))
             {
-                Debug.Log($"[iOSBuildProcess] Set DEVELOPMENT_TEAM: {buildSetting.developmentTeamId}");
+                Debug.Log($"[iOSBuildProcess] Set DEVELOPMENT_TEAM: {developmentTeamId}");
             }
 
             // 추가 프레임워크 (Main 타겟에만)
