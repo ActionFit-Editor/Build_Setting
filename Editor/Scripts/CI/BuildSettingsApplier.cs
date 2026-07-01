@@ -17,6 +17,7 @@ namespace ActionFit.BuildSetting.Editor
 
             PlayerSettings.bundleVersion = settings.buildVersion;
             PlayerSettings.iOS.buildNumber = settings.bundleNo;
+            PlayerSettings.iOS.targetOSVersionString = settings.GetResolvedIosTargetOSVersion();
 
             if (int.TryParse(settings.bundleNo, out int bundleCode))
             {
@@ -29,7 +30,7 @@ namespace ActionFit.BuildSetting.Editor
 
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
-            Debug.Log($"[BuildSettingsApplier] Version settings applied: version={settings.buildVersion}, bundleNo={settings.bundleNo}");
+            Debug.Log($"[BuildSettingsApplier] Version settings applied: version={settings.buildVersion}, bundleNo={settings.bundleNo}, iosTargetOSVersion={settings.GetResolvedIosTargetOSVersion()}");
         }
     }
 }

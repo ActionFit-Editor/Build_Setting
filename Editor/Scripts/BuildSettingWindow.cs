@@ -20,6 +20,7 @@ namespace ActionFit.BuildSetting.Editor
 
         public const string SOPrefsKey = "LastUsedBuildSettings";
         public const string DefaultSettingsAssetPath = "Assets/_Data/_BuildSetting/BuildSettingsSO.asset";
+        public const string DefaultIosTargetOSVersion = "13.0";
 
         // Android
         public string buildFileName = "[Enter Build File Name]"; // 빌드 파일명
@@ -42,6 +43,7 @@ namespace ActionFit.BuildSetting.Editor
         public string iosBuildPath = "[Enter iOS Build Path]"; // iOS 빌드 경로
         public string iosPackageName = "[Enter iOS Bundle ID]"; // iOS 패키지명
         public string developmentTeamId = "[Enter Apple Team ID]"; // Apple Developer Team ID
+        public string iosTargetOSVersion = DefaultIosTargetOSVersion; // iOS Deployment Target
         public bool targetIPhone = true; // iPhone 타겟
         public bool targetIPad = true; // iPad 타겟
         public bool useGameCenter = false; // Game Center
@@ -138,7 +140,19 @@ namespace ActionFit.BuildSetting.Editor
                 bundleNo = PlayerSettings.iOS.buildNumber;
             if (!string.IsNullOrWhiteSpace(PlayerSettings.iOS.appleDeveloperTeamID))
                 developmentTeamId = PlayerSettings.iOS.appleDeveloperTeamID;
+            if (!string.IsNullOrWhiteSpace(PlayerSettings.iOS.targetOSVersionString))
+                iosTargetOSVersion = PlayerSettings.iOS.targetOSVersionString;
 #endif
+        }
+
+        public string GetResolvedIosTargetOSVersion()
+        {
+            return ResolveIosTargetOSVersion(iosTargetOSVersion);
+        }
+
+        public static string ResolveIosTargetOSVersion(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? DefaultIosTargetOSVersion : value.Trim();
         }
 
         private static BuildSettingsSO LoadAndRemember(string path)
@@ -596,6 +610,8 @@ namespace ActionFit.BuildSetting.Editor
 
             EditorGUILayout.PropertyField(_serializedSettings.FindProperty("developmentTeamId"),
                 new GUIContent("Development Team ID"));
+            EditorGUILayout.PropertyField(_serializedSettings.FindProperty("iosTargetOSVersion"),
+                new GUIContent("Target iOS Version"));
 
             // Target Device 설정
             EditorGUILayout.Space(10);
@@ -775,6 +791,7 @@ namespace ActionFit.BuildSetting.Editor
             if (!ValidateRequired("iOS Bundle ID", settings.iosPackageName)) return false;
             if (!settings.saveFileInProject && !ValidateRequired("iOS Build Path", settings.iosBuildPath)) return false;
             if (!ValidateRequired("Apple Team ID", settings.developmentTeamId)) return false;
+            if (!ValidateRequired("Target iOS Version", settings.iosTargetOSVersion)) return false;
 
             // 패키지명 자동 탐색
             if (settings.autoSearchPackageName)
@@ -852,6 +869,7 @@ namespace ActionFit.BuildSetting.Editor
             PlayerSettings.bundleVersion = settings.buildVersion;
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, settings.iosPackageName);
             PlayerSettings.iOS.buildNumber = settings.bundleNo;
+            PlayerSettings.iOS.targetOSVersionString = settings.GetResolvedIosTargetOSVersion();
 
             return true;
         }

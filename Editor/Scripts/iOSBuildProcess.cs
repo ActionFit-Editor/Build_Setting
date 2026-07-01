@@ -250,12 +250,13 @@ namespace ActionFit.BuildSetting.Editor
                 deviceFamily += "2";
             }
             if (string.IsNullOrEmpty(deviceFamily)) deviceFamily = "1,2";
+            string iosTargetOSVersion = buildSetting.GetResolvedIosTargetOSVersion();
 
             // 모든 타겟에 공통 빌드 설정 적용
             foreach (string targetGuid in allTargets)
             {
                 proj.SetBuildProperty(targetGuid, "ENABLE_BITCODE", "NO");
-                proj.SetBuildProperty(targetGuid, "IPHONEOS_DEPLOYMENT_TARGET", "13.0");
+                proj.SetBuildProperty(targetGuid, "IPHONEOS_DEPLOYMENT_TARGET", iosTargetOSVersion);
                 proj.SetBuildProperty(targetGuid, "TARGETED_DEVICE_FAMILY", deviceFamily);
                 proj.SetBuildProperty(targetGuid, "SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD", "NO");
                 proj.SetBuildProperty(targetGuid, "SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD", "NO");
@@ -270,7 +271,7 @@ namespace ActionFit.BuildSetting.Editor
                 }
             }
 
-            Debug.Log($"[iOSBuildProcess] Applied settings to {allTargets.Count} targets. TARGETED_DEVICE_FAMILY: {deviceFamily}");
+            Debug.Log($"[iOSBuildProcess] Applied settings to {allTargets.Count} targets. TARGETED_DEVICE_FAMILY: {deviceFamily}, IPHONEOS_DEPLOYMENT_TARGET: {iosTargetOSVersion}");
 
             if (!string.IsNullOrEmpty(buildSetting.developmentTeamId))
             {
