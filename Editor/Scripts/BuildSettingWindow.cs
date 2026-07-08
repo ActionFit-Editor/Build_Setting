@@ -57,6 +57,7 @@ namespace ActionFit.BuildSetting.Editor
         // Common
         [FormerlySerializedAs("actionFitBuildSetting")]
         public BuildCompanySettingsSO companySettings; // 회사/Team ID 기본 세팅
+        public bool useManualCompanyProfile = false; // Company Profile 자동 매칭 대신 수동 입력 사용
         public string companyName = "[Enter Company Name]"; // 회사명
         public string productName = "[Enter Product Name]"; // 앱 이름
         public bool saveFileInProject = false; // 프로젝트 내 Builds 폴더에 저장
@@ -176,7 +177,8 @@ namespace ActionFit.BuildSetting.Editor
 
         public string GetResolvedDevelopmentTeamId()
         {
-            if (companySettings != null &&
+            if (!useManualCompanyProfile &&
+                companySettings != null &&
                 companySettings.TryGetDevelopmentTeamId(companyName, out string matchedTeamId))
                 return matchedTeamId;
 
@@ -196,6 +198,7 @@ namespace ActionFit.BuildSetting.Editor
 
         public bool SyncDevelopmentTeamIdFromCompanyProfile()
         {
+            if (useManualCompanyProfile) return false;
             if (companySettings == null) return false;
             if (!companySettings.TryGetDevelopmentTeamId(companyName, out string matchedTeamId)) return false;
             if (string.Equals(developmentTeamId, matchedTeamId, StringComparison.Ordinal)) return false;
@@ -461,42 +464,81 @@ namespace ActionFit.BuildSetting.Editor
         {
             var companyNameProperty = _serializedSettings.FindProperty("companyName");
             var developmentTeamIdProperty = _serializedSettings.FindProperty("developmentTeamId");
+            var useManualCompanyProfileProperty = _serializedSettings.FindProperty("useManualCompanyProfile");
             if (companySettingsAsset == null)
             {
                 EditorGUILayout.PropertyField(companyNameProperty);
+                EditorGUILayout.PropertyField(developmentTeamIdProperty, new GUIContent("Development Team ID"));
                 return;
             }
 
             var profiles = companySettingsAsset.CompanyProfiles
                 .Where(profile => profile != null && !string.IsNullOrWhiteSpace(profile.companyName))
                 .ToList();
-            if (profiles.Count == 0)
-            {
-                EditorGUILayout.PropertyField(companyNameProperty);
-                return;
-            }
 
             int matchedIndex = profiles.FindIndex(profile =>
                 string.Equals(profile.companyName?.Trim(), companyNameProperty.stringValue?.Trim(),
                     StringComparison.OrdinalIgnoreCase));
-            int currentOptionIndex = matchedIndex >= 0 ? matchedIndex + 1 : 0;
-            string[] options = new[] { "Custom / Manual" }
+            bool useManualCompanyProfile = useManualCompanyProfileProperty?.boolValue ?? false;
+            if (!useManualCompanyProfile && matchedIndex < 0)
+            {
+                useManualCompanyProfile = true;
+                if (useManualCompanyProfileProperty != null)
+                    useManualCompanyProfileProperty.boolValue = true;
+            }
+            int currentOptionIndex = !useManualCompanyProfile && matchedIndex >= 0 ? matchedIndex + 2 : 1;
+            string[] options = new[] { "Custom / Add Company", "Custom / Manual" }
                 .Concat(profiles.Select(profile => profile.companyName.Trim()))
                 .ToArray();
 
             EditorGUI.BeginChangeCheck();
             int selectedOptionIndex = EditorGUILayout.Popup("Company Profile", currentOptionIndex, options);
-            if (EditorGUI.EndChangeCheck() && selectedOptionIndex > 0)
+            if (EditorGUI.EndChangeCheck())
             {
-                var selectedProfile = profiles[selectedOptionIndex - 1];
-                companyNameProperty.stringValue = selectedProfile.companyName.Trim();
-                developmentTeamIdProperty.stringValue = selectedProfile.developmentTeamId?.Trim() ?? "";
+                if (selectedOptionIndex == 0)
+                {
+                    CompanyProfileEditWindow.Open(companySettingsAsset, "", "", profile =>
+                    {
+                        _serializedSettings.Update();
+                        _serializedSettings.FindProperty("companyName").stringValue = profile.companyName.Trim();
+                        _serializedSettings.FindProperty("developmentTeamId").stringValue =
+                            profile.developmentTeamId?.Trim() ?? "";
+                        _serializedSettings.FindProperty("useManualCompanyProfile").boolValue = false;
+                        _serializedSettings.ApplyModifiedProperties();
+                        EditorUtility.SetDirty(settings);
+                        AssetDatabase.SaveAssets();
+                        Repaint();
+                    });
+                    return;
+                }
+
+                if (useManualCompanyProfileProperty != null)
+                    useManualCompanyProfileProperty.boolValue = selectedOptionIndex == 1;
+                useManualCompanyProfile = selectedOptionIndex == 1;
+
+                if (selectedOptionIndex > 1)
+                {
+                    var selectedProfile = profiles[selectedOptionIndex - 2];
+                    companyNameProperty.stringValue = selectedProfile.companyName.Trim();
+                    developmentTeamIdProperty.stringValue = selectedProfile.developmentTeamId?.Trim() ?? "";
+                }
             }
 
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(companyNameProperty, new GUIContent("Company Name"));
-            EditorGUI.EndChangeCheck();
+            if (useManualCompanyProfile)
+            {
+                DrawManualCompanyProfileControls(companyNameProperty, developmentTeamIdProperty);
+                return;
+            }
+
             SyncSerializedDevelopmentTeamId(companySettingsAsset, companyNameProperty, developmentTeamIdProperty);
+        }
+
+        private static void DrawManualCompanyProfileControls(
+            SerializedProperty companyNameProperty,
+            SerializedProperty developmentTeamIdProperty)
+        {
+            EditorGUILayout.PropertyField(companyNameProperty, new GUIContent("Company Name"));
+            EditorGUILayout.PropertyField(developmentTeamIdProperty, new GUIContent("Development Team ID"));
         }
 
         private void DrawPathSettings()
@@ -885,10 +927,15 @@ namespace ActionFit.BuildSetting.Editor
         {
             var companySettingsAsset = _serializedSettings.FindProperty("companySettings")
                 ?.objectReferenceValue as BuildCompanySettingsSO;
+            bool useManualCompanyProfile = _serializedSettings.FindProperty("useManualCompanyProfile")?.boolValue ?? false;
             var companyNameProperty = _serializedSettings.FindProperty("companyName");
             var developmentTeamIdProperty = _serializedSettings.FindProperty("developmentTeamId");
 
-            if (companySettingsAsset != null &&
+            if (useManualCompanyProfile)
+                return;
+
+            if (!useManualCompanyProfile &&
+                companySettingsAsset != null &&
                 companySettingsAsset.TryGetDevelopmentTeamId(companyNameProperty.stringValue, out string matchedTeamId))
             {
                 developmentTeamIdProperty.stringValue = matchedTeamId;
@@ -1479,6 +1526,87 @@ namespace ActionFit.BuildSetting.Editor
 #endif
 
         #endregion
+    }
+
+    internal sealed class CompanyProfileEditWindow : EditorWindow
+    {
+        private BuildCompanySettingsSO _companySettings;
+        private Action<BuildCompanyProfile> _onSaved;
+        private string _companyName = "";
+        private string _developmentTeamId = "";
+
+        public static void Open(
+            BuildCompanySettingsSO companySettings,
+            string companyName,
+            string developmentTeamId,
+            Action<BuildCompanyProfile> onSaved)
+        {
+            var window = CreateInstance<CompanyProfileEditWindow>();
+            window.titleContent = new GUIContent("Add Company Profile");
+            window.minSize = new Vector2(360, 130);
+            window._companySettings = companySettings;
+            window._companyName = companyName?.Trim() ?? "";
+            window._developmentTeamId = developmentTeamId?.Trim() ?? "";
+            window._onSaved = onSaved;
+            window.ShowUtility();
+        }
+
+        private void OnGUI()
+        {
+            EditorGUILayout.Space(8);
+            _companyName = EditorGUILayout.TextField("Company Name", _companyName);
+            _developmentTeamId = EditorGUILayout.TextField("Development Team ID", _developmentTeamId);
+            EditorGUILayout.Space(8);
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Cancel", GUILayout.Width(90)))
+                Close();
+
+            EditorGUI.BeginDisabledGroup(!CanSave());
+            if (GUILayout.Button("Save", GUILayout.Width(90)))
+                Save();
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private bool CanSave()
+        {
+            return _companySettings != null &&
+                   !string.IsNullOrWhiteSpace(_companyName) &&
+                   !string.IsNullOrWhiteSpace(_developmentTeamId);
+        }
+
+        private void Save()
+        {
+            string companyName = _companyName.Trim();
+            string developmentTeamId = _developmentTeamId.Trim();
+            bool alreadyExists = _companySettings.TryGetProfile(companyName, out var existingProfile);
+            if (alreadyExists &&
+                !string.Equals(existingProfile.developmentTeamId?.Trim(), developmentTeamId, StringComparison.Ordinal))
+            {
+                bool update = EditorUtility.DisplayDialog(
+                    "Company Profile",
+                    $"`{companyName}` already exists.\n\nUpdate its Development Team ID?",
+                    "Update",
+                    "Cancel");
+                if (!update) return;
+            }
+
+            _companySettings.EnsureProfile(companyName, developmentTeamId, alreadyExists);
+            EditorUtility.SetDirty(_companySettings);
+            AssetDatabase.SaveAssets();
+
+            if (!_companySettings.TryGetProfile(companyName, out var savedProfile))
+                savedProfile = new BuildCompanyProfile
+                {
+                    companyName = companyName,
+                    developmentTeamId = developmentTeamId
+                };
+
+            _onSaved?.Invoke(savedProfile);
+            Close();
+        }
     }
 }
 

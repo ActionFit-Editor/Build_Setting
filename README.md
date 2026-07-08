@@ -7,7 +7,7 @@ Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSett
 ```json
 {
   "dependencies": {
-    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.6"
+    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.7"
   }
 }
 ```
@@ -20,7 +20,7 @@ Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSett
 - 회사/Team ID 프로필 세팅 에셋: `BuildCompanySettingsSO`
 - 패키지에는 설정 에셋을 저장하지 않습니다. 기존 `BuildSettingsSO`가 있으면 자동으로 찾아서 창 필드에 배정하고, 없으면 `Assets/_Data/_BuildSetting/BuildSettingsSO.asset`을 자동 생성합니다.
 - `BuildCompanySettingsSO`는 `Assets/_Data/_BuildSetting/BuildCompanySettingsSO.asset`에 생성되며, public 패키지에서는 특정 회사 프로필을 자동 추가하지 않습니다.
-- `BuildSettingsSO`에서 `BuildCompanySettingsSO`를 드래그앤드롭으로 연결하고 `Company Profile`을 선택하면 `companyName`과 iOS `Development Team ID`가 함께 세팅됩니다.
+- `BuildSettingsSO`에서 `BuildCompanySettingsSO`를 드래그앤드롭으로 연결하고 `Company Profile`을 선택하면 `companyName`과 iOS `Development Team ID`가 함께 세팅됩니다. `Custom / Add Company`는 회사명/Team ID를 입력해 `BuildCompanySettingsSO`에 새 프로필을 저장하는 창을 열고, `Custom / Manual`은 프로필 자동 매칭을 끄고 현재 BuildSettingsSO의 회사명과 Team ID를 직접 입력합니다. 저장된 회사 프로필을 선택한 상태에서는 수동 입력 필드를 숨깁니다.
 - 회사별 기본 프로필 자동 세팅은 별도 전용 bootstrap 패키지가 담당합니다.
 - 처음 자동 생성되는 `BuildSettingsSO`는 현재 프로젝트의 `PlayerSettings`에서 company name, product name, bundle version, Android/iOS application identifier, bundle number, iOS target OS version 같은 기본값을 1차 초기화로 가져옵니다.
 - iOS의 `Target iOS Version` 값은 Unity `PlayerSettings.iOS.targetOSVersionString`과 Xcode `IPHONEOS_DEPLOYMENT_TARGET`에 적용됩니다. 기본값은 기존 동작과 같은 `13.0`입니다.

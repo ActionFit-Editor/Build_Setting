@@ -7,7 +7,7 @@ This file is shipped inside the UPM package so an AI assistant in a consuming Un
 - Package ID: `com.actionfit.buildsetting`
 - Display name: Build Setting
 - Repository: `https://github.com/ActionFit-Editor/Build_Setting.git`
-- Current package version at generation time: `1.1.6`
+- Current package version at generation time: `1.1.7`
 - Unity version: `6000.2`
 
 ## Purpose
@@ -53,7 +53,7 @@ Read this file when:
 - SO focus menu: `Tools/ActionFit/BuildSetting/SO포커싱 기능`.
 - This package stores Android/iOS build settings in `BuildSettingsSO`.
 - `BuildCompanySettingsSO` stores optional company profiles for `BuildSettingsSO`. It is created at `Assets/_Data/_BuildSetting/BuildCompanySettingsSO.asset`; the legacy `Assets/_Data/_BuildSetting/ActionFitBuildSetting_SO.asset` path is still read for migration.
-- `BuildSettingsSO.companySettings` is a drag-and-drop reference to that company profile SO. The serialized field uses `[FormerlySerializedAs("actionFitBuildSetting")]` so existing assets migrate. The SettingWindow exposes a `Company Profile` popup and synchronizes `companyName` with `developmentTeamId` when a known profile is selected.
+- `BuildSettingsSO.companySettings` is a drag-and-drop reference to that company profile SO. The serialized field uses `[FormerlySerializedAs("actionFitBuildSetting")]` so existing assets migrate. The SettingWindow exposes a `Company Profile` popup with `Custom / Add Company`, `Custom / Manual`, and stored company profiles. `Add Company` opens a small editor window that saves a new company name / Development Team ID pair into `BuildCompanySettingsSO`. Stored profile selection synchronizes `companyName` with `developmentTeamId` and hides manual company fields. `BuildSettingsSO.useManualCompanyProfile` stores whether `Custom / Manual` is selected; manual mode disables profile auto-sync so both company name and Development Team ID remain editable.
 - This public base package must not hardcode company-specific profiles. Company-specific defaults belong in separate private bootstrap packages.
 - `BuildSettingsSO.iosTargetOSVersion` stores the iOS Deployment Target. The SettingWindow exposes it as `Target iOS Version`, applies it to `PlayerSettings.iOS.targetOSVersionString`, and iOS Xcode post-processing writes it to `IPHONEOS_DEPLOYMENT_TARGET`. The default remains `13.0` for existing behavior.
 - `BuildSettingsSO.associatedDomains` stores iOS Associated Domains entitlement entries such as `applinks:actionfit.sng.link`. The SettingWindow exposes it as a string list under iOS Capabilities, and iOS Xcode post-processing writes non-empty, trimmed, de-duplicated entries to the generated entitlements file. The Apple App ID and provisioning profile must also have the Associated Domains capability enabled.
