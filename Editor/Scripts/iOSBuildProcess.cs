@@ -366,6 +366,13 @@ namespace ActionFit.BuildSetting.Editor
             if (setting.useGameCenter) manager.AddGameCenter();
             if (setting.useICloud) manager.AddiCloud(true, false, false, false, null);
 
+            string[] associatedDomains = setting.GetResolvedAssociatedDomains();
+            if (associatedDomains.Length > 0)
+            {
+                manager.AddAssociatedDomains(associatedDomains);
+                Debug.Log($"[iOSBuildProcess] Added Associated Domains: {string.Join(", ", associatedDomains)}");
+            }
+
             manager.WriteToFile();
         }
 

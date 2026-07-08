@@ -49,6 +49,7 @@ namespace ActionFit.BuildSetting.Editor
         public bool useGameCenter = false; // Game Center
         public bool usePushNotifications = false; // Background Mode (Remote Notifications) 자동 포함
         public bool useICloud = false; // iCloud (Key-value storage)
+        public List<string> associatedDomains = new(); // iOS Associated Domains entitlements (e.g. applinks:example.com)
         public List<string> addFrameworks = new(); // 추가 프레임워크 목록
         public List<string> removeFrameworks = new(); // UnityFramework에서 제거할 라이브러리 목록
 
@@ -183,6 +184,17 @@ namespace ActionFit.BuildSetting.Editor
                 return matchedTeamId;
 
             return string.IsNullOrWhiteSpace(developmentTeamId) ? "" : developmentTeamId.Trim();
+        }
+
+        public string[] GetResolvedAssociatedDomains()
+        {
+            if (associatedDomains == null) return Array.Empty<string>();
+
+            return associatedDomains
+                .Where(domain => !string.IsNullOrWhiteSpace(domain))
+                .Select(domain => domain.Trim())
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
         }
 
         public bool SyncDevelopmentTeamIdFromCompanyProfile()
@@ -757,6 +769,12 @@ namespace ActionFit.BuildSetting.Editor
                 new GUIContent("Push Notifications (+ Background Mode)"));
             EditorGUILayout.PropertyField(_serializedSettings.FindProperty("useICloud"),
                 new GUIContent("iCloud (Key-value storage)"));
+
+            EditorGUILayout.Space(5);
+            EditorGUILayout.PropertyField(_serializedSettings.FindProperty("associatedDomains"),
+                new GUIContent("Associated Domains"), true);
+            EditorGUILayout.HelpBox("Universal Links require entries such as applinks:actionfit.sng.link. The same capability must also be enabled on the Apple App ID and provisioning profile.",
+                MessageType.Info);
 
             EditorGUILayout.Space(5);
             EditorGUILayout.PropertyField(_serializedSettings.FindProperty("addFrameworks"),

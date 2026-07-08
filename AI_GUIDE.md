@@ -7,7 +7,7 @@ This file is shipped inside the UPM package so an AI assistant in a consuming Un
 - Package ID: `com.actionfit.buildsetting`
 - Display name: Build Setting
 - Repository: `https://github.com/ActionFit-Editor/Build_Setting.git`
-- Current package version at generation time: `1.1.4`
+- Current package version at generation time: `1.1.5`
 - Unity version: `6000.2`
 
 ## Purpose
@@ -55,6 +55,7 @@ Read this file when:
 - `ActionFitBuildSetting_SO` stores default company profiles for `BuildSettingsSO`. It is auto-created at `Assets/_Data/_BuildSetting/ActionFitBuildSetting_SO.asset` and keeps default `ActionFit / 49W7A8489P` and `Stormborn / MCTHBCST32` profiles when the profile list is empty or missing those entries.
 - `BuildSettingsSO.actionFitBuildSetting` is a drag-and-drop reference to that company profile SO. The SettingWindow exposes a `Company Profile` popup and synchronizes `companyName` with `developmentTeamId` when a known profile is selected.
 - `BuildSettingsSO.iosTargetOSVersion` stores the iOS Deployment Target. The SettingWindow exposes it as `Target iOS Version`, applies it to `PlayerSettings.iOS.targetOSVersionString`, and iOS Xcode post-processing writes it to `IPHONEOS_DEPLOYMENT_TARGET`. The default remains `13.0` for existing behavior.
+- `BuildSettingsSO.associatedDomains` stores iOS Associated Domains entitlement entries such as `applinks:actionfit.sng.link`. The SettingWindow exposes it as a string list under iOS Capabilities, and iOS Xcode post-processing writes non-empty, trimmed, de-duplicated entries to the generated entitlements file. The Apple App ID and provisioning profile must also have the Associated Domains capability enabled.
 - `BuildSettingsSO.FindOrCreateSettingsAsset()` should find the last-used or first project asset, and create `Assets/_Data/_BuildSetting/BuildSettingsSO.asset` only when none exists.
 - The first auto-created `BuildSettingsSO` should initialize user-editable identity/version fields from current `PlayerSettings` values without overwriting existing assets.
 - `BuildSettingsSO` also stores temporary BuildCommit request override fields for Google Play service account JSON and App Store Connect API key id, issuer id, and P8.

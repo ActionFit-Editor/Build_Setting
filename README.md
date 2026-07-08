@@ -7,7 +7,7 @@ Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSett
 ```json
 {
   "dependencies": {
-    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.4"
+    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.5"
   }
 }
 ```
@@ -23,6 +23,7 @@ Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSett
 - `BuildSettingsSO`에서 `ActionFitBuildSetting_SO`를 드래그앤드롭으로 연결하고 `Company Profile`을 선택하면 `companyName`과 iOS `Development Team ID`가 함께 세팅됩니다.
 - 처음 자동 생성되는 `BuildSettingsSO`는 현재 프로젝트의 `PlayerSettings`에서 company name, product name, bundle version, Android/iOS application identifier, bundle number, iOS target OS version 같은 기본값을 1차 초기화로 가져옵니다.
 - iOS의 `Target iOS Version` 값은 Unity `PlayerSettings.iOS.targetOSVersionString`과 Xcode `IPHONEOS_DEPLOYMENT_TARGET`에 적용됩니다. 기본값은 기존 동작과 같은 `13.0`입니다.
+- iOS `Associated Domains`는 `BuildSettingsSO`의 리스트에 `applinks:actionfit.sng.link`처럼 입력합니다. iOS Xcode post process가 entitlements에 자동 반영하지만, Apple Developer Portal의 App ID와 provisioning profile에도 Associated Domains capability가 활성화되어 있어야 실제 서명/Universal Links가 동작합니다.
 
 ## 자동 빌드 연동
 
