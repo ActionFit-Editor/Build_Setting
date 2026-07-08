@@ -7,6 +7,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Process = System.Diagnostics.Process;
 using ProcessStartInfo = System.Diagnostics.ProcessStartInfo;
 #pragma warning disable CS0618 // 형식 또는 멤버는 사용되지 않습니다.
@@ -54,7 +55,8 @@ namespace ActionFit.BuildSetting.Editor
         public List<string> removeFrameworks = new(); // UnityFramework에서 제거할 라이브러리 목록
 
         // Common
-        public ActionFitBuildSetting_SO actionFitBuildSetting; // 회사/Team ID 기본 세팅
+        [FormerlySerializedAs("actionFitBuildSetting")]
+        public BuildCompanySettingsSO companySettings; // 회사/Team ID 기본 세팅
         public string companyName = "[Enter Company Name]"; // 회사명
         public string productName = "[Enter Product Name]"; // 앱 이름
         public bool saveFileInProject = false; // 프로젝트 내 Builds 폴더에 저장
@@ -111,7 +113,7 @@ namespace ActionFit.BuildSetting.Editor
 
         public void InitializeFromProjectSettings()
         {
-            EnsureActionFitBuildSetting();
+            EnsureCompanySettings();
 
             string playerCompanyName = PlayerSettings.companyName;
             if (!string.IsNullOrWhiteSpace(playerCompanyName))
@@ -155,20 +157,15 @@ namespace ActionFit.BuildSetting.Editor
             return ResolveIosTargetOSVersion(iosTargetOSVersion);
         }
 
-        public bool EnsureActionFitBuildSetting()
+        public bool EnsureCompanySettings()
         {
             bool changed = false;
-            if (actionFitBuildSetting == null)
+            if (companySettings == null)
             {
-                actionFitBuildSetting = ActionFitBuildSetting_SO.FindOrCreateSettingsAsset();
-                changed = actionFitBuildSetting != null;
+                companySettings = BuildCompanySettingsSO.FindOrCreateSettingsAsset();
+                changed = companySettings != null;
             }
 
-            if (actionFitBuildSetting == null) return changed;
-            if (!actionFitBuildSetting.EnsureDefaultProfiles()) return changed;
-
-            EditorUtility.SetDirty(actionFitBuildSetting);
-            AssetDatabase.SaveAssets();
             return changed;
         }
 
@@ -179,8 +176,8 @@ namespace ActionFit.BuildSetting.Editor
 
         public string GetResolvedDevelopmentTeamId()
         {
-            if (actionFitBuildSetting != null &&
-                actionFitBuildSetting.TryGetDevelopmentTeamId(companyName, out string matchedTeamId))
+            if (companySettings != null &&
+                companySettings.TryGetDevelopmentTeamId(companyName, out string matchedTeamId))
                 return matchedTeamId;
 
             return string.IsNullOrWhiteSpace(developmentTeamId) ? "" : developmentTeamId.Trim();
@@ -199,8 +196,8 @@ namespace ActionFit.BuildSetting.Editor
 
         public bool SyncDevelopmentTeamIdFromCompanyProfile()
         {
-            if (actionFitBuildSetting == null) return false;
-            if (!actionFitBuildSetting.TryGetDevelopmentTeamId(companyName, out string matchedTeamId)) return false;
+            if (companySettings == null) return false;
+            if (!companySettings.TryGetDevelopmentTeamId(companyName, out string matchedTeamId)) return false;
             if (string.Equals(developmentTeamId, matchedTeamId, StringComparison.Ordinal)) return false;
 
             developmentTeamId = matchedTeamId;
@@ -220,7 +217,7 @@ namespace ActionFit.BuildSetting.Editor
             if (settings != null)
             {
                 EditorPrefs.SetString(SOPrefsKey, path);
-                bool changed = settings.EnsureActionFitBuildSetting();
+                bool changed = settings.EnsureCompanySettings();
                 changed |= settings.SyncDevelopmentTeamIdFromCompanyProfile();
                 if (changed)
                 {
@@ -294,7 +291,7 @@ namespace ActionFit.BuildSetting.Editor
             settings = BuildSettingsSO.FindOrCreateSettingsAsset();
             if (settings != null)
             {
-                EnsureActionFitBuildSettingReference();
+                EnsureCompanySettingsReference();
                 _serializedSettings = new SerializedObject(settings);
                 EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
                 AutoSearchPackageNameOnEnable();
@@ -347,7 +344,7 @@ namespace ActionFit.BuildSetting.Editor
             {
                 if (settings != null)
                 {
-                    EnsureActionFitBuildSettingReference();
+                    EnsureCompanySettingsReference();
                     _serializedSettings = new SerializedObject(settings);
                     EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
                 }
@@ -373,7 +370,7 @@ namespace ActionFit.BuildSetting.Editor
                     AssetDatabase.CreateAsset(newSettings, path);
                     AssetDatabase.SaveAssets();
                     settings = newSettings;
-                    EnsureActionFitBuildSettingReference();
+                    EnsureCompanySettingsReference();
                     _serializedSettings = new SerializedObject(settings);
                     EditorPrefs.SetString(SOPrefsKey, path);
                 }
@@ -389,7 +386,7 @@ namespace ActionFit.BuildSetting.Editor
                 settings = BuildSettingsSO.FindOrCreateSettingsAsset();
                 if (settings != null)
                 {
-                    EnsureActionFitBuildSettingReference();
+                    EnsureCompanySettingsReference();
                     _serializedSettings = new SerializedObject(settings);
                     EditorPrefs.SetString(SOPrefsKey, AssetDatabase.GetAssetPath(settings));
                 }
@@ -443,11 +440,11 @@ namespace ActionFit.BuildSetting.Editor
 
         private void DrawCompanySettings()
         {
-            var buildSettingProperty = _serializedSettings.FindProperty("actionFitBuildSetting");
+            var buildSettingProperty = _serializedSettings.FindProperty("companySettings");
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(buildSettingProperty, new GUIContent("ActionFit Build Setting"));
+            EditorGUILayout.PropertyField(buildSettingProperty, new GUIContent("Build Company Settings"));
             if (GUILayout.Button("Default", GUILayout.Width(70)))
-                buildSettingProperty.objectReferenceValue = ActionFitBuildSetting_SO.FindOrCreateSettingsAsset();
+                buildSettingProperty.objectReferenceValue = BuildCompanySettingsSO.FindOrCreateSettingsAsset();
             if (GUILayout.Button("Ping", GUILayout.Width(50)) && buildSettingProperty.objectReferenceValue != null)
             {
                 Selection.activeObject = buildSettingProperty.objectReferenceValue;
@@ -456,22 +453,21 @@ namespace ActionFit.BuildSetting.Editor
             }
             EditorGUILayout.EndHorizontal();
 
-            var actionFitBuildSetting = buildSettingProperty.objectReferenceValue as ActionFitBuildSetting_SO;
-            EnsureDefaultCompanyProfiles(actionFitBuildSetting);
-            DrawCompanyProfilePopup(actionFitBuildSetting);
+            var companySettingsAsset = buildSettingProperty.objectReferenceValue as BuildCompanySettingsSO;
+            DrawCompanyProfilePopup(companySettingsAsset);
         }
 
-        private void DrawCompanyProfilePopup(ActionFitBuildSetting_SO actionFitBuildSetting)
+        private void DrawCompanyProfilePopup(BuildCompanySettingsSO companySettingsAsset)
         {
             var companyNameProperty = _serializedSettings.FindProperty("companyName");
             var developmentTeamIdProperty = _serializedSettings.FindProperty("developmentTeamId");
-            if (actionFitBuildSetting == null)
+            if (companySettingsAsset == null)
             {
                 EditorGUILayout.PropertyField(companyNameProperty);
                 return;
             }
 
-            var profiles = actionFitBuildSetting.CompanyProfiles
+            var profiles = companySettingsAsset.CompanyProfiles
                 .Where(profile => profile != null && !string.IsNullOrWhiteSpace(profile.companyName))
                 .ToList();
             if (profiles.Count == 0)
@@ -500,7 +496,7 @@ namespace ActionFit.BuildSetting.Editor
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(companyNameProperty, new GUIContent("Company Name"));
             EditorGUI.EndChangeCheck();
-            SyncSerializedDevelopmentTeamId(actionFitBuildSetting, companyNameProperty, developmentTeamIdProperty);
+            SyncSerializedDevelopmentTeamId(companySettingsAsset, companyNameProperty, developmentTeamIdProperty);
         }
 
         private void DrawPathSettings()
@@ -855,19 +851,15 @@ namespace ActionFit.BuildSetting.Editor
 
         #region Build Settings
 
-        private void EnsureActionFitBuildSettingReference()
+        private void EnsureCompanySettingsReference()
         {
             if (settings == null) return;
 
             bool changed = false;
-            if (settings.actionFitBuildSetting == null)
+            if (settings.companySettings == null)
             {
-                settings.actionFitBuildSetting = ActionFitBuildSetting_SO.FindOrCreateSettingsAsset();
+                settings.companySettings = BuildCompanySettingsSO.FindOrCreateSettingsAsset();
                 changed = true;
-            }
-            else
-            {
-                EnsureDefaultCompanyProfiles(settings.actionFitBuildSetting);
             }
 
             changed |= settings.SyncDevelopmentTeamIdFromCompanyProfile();
@@ -877,22 +869,13 @@ namespace ActionFit.BuildSetting.Editor
             AssetDatabase.SaveAssets();
         }
 
-        private static void EnsureDefaultCompanyProfiles(ActionFitBuildSetting_SO actionFitBuildSetting)
-        {
-            if (actionFitBuildSetting == null) return;
-            if (!actionFitBuildSetting.EnsureDefaultProfiles()) return;
-
-            EditorUtility.SetDirty(actionFitBuildSetting);
-            AssetDatabase.SaveAssets();
-        }
-
         private static void SyncSerializedDevelopmentTeamId(
-            ActionFitBuildSetting_SO actionFitBuildSetting,
+            BuildCompanySettingsSO companySettingsAsset,
             SerializedProperty companyNameProperty,
             SerializedProperty developmentTeamIdProperty)
         {
-            if (actionFitBuildSetting == null || companyNameProperty == null || developmentTeamIdProperty == null) return;
-            if (!actionFitBuildSetting.TryGetDevelopmentTeamId(companyNameProperty.stringValue, out string matchedTeamId)) return;
+            if (companySettingsAsset == null || companyNameProperty == null || developmentTeamIdProperty == null) return;
+            if (!companySettingsAsset.TryGetDevelopmentTeamId(companyNameProperty.stringValue, out string matchedTeamId)) return;
             if (string.Equals(developmentTeamIdProperty.stringValue, matchedTeamId, StringComparison.Ordinal)) return;
 
             developmentTeamIdProperty.stringValue = matchedTeamId;
@@ -900,13 +883,13 @@ namespace ActionFit.BuildSetting.Editor
 
         private void DrawDevelopmentTeamIdField()
         {
-            var actionFitBuildSetting = _serializedSettings.FindProperty("actionFitBuildSetting")
-                ?.objectReferenceValue as ActionFitBuildSetting_SO;
+            var companySettingsAsset = _serializedSettings.FindProperty("companySettings")
+                ?.objectReferenceValue as BuildCompanySettingsSO;
             var companyNameProperty = _serializedSettings.FindProperty("companyName");
             var developmentTeamIdProperty = _serializedSettings.FindProperty("developmentTeamId");
 
-            if (actionFitBuildSetting != null &&
-                actionFitBuildSetting.TryGetDevelopmentTeamId(companyNameProperty.stringValue, out string matchedTeamId))
+            if (companySettingsAsset != null &&
+                companySettingsAsset.TryGetDevelopmentTeamId(companyNameProperty.stringValue, out string matchedTeamId))
             {
                 developmentTeamIdProperty.stringValue = matchedTeamId;
                 EditorGUI.BeginDisabledGroup(true);

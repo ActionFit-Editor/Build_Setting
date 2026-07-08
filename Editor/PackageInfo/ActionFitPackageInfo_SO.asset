@@ -19,13 +19,19 @@ MonoBehaviour:
   _owner: "\uC1A1\uC81C\uC6B0"
   _status: verified
   _description: Android/iOS PlayerSettings, build paths, versioning, signing, Addressables
-    prebuild, and optional CustomSymbols/GPGS integration for ActionFit Unity projects.
-  _releaseNote: '- Added BuildSettingsSO Associated Domains list for iOS Universal
-    Links.
-
-    - iOS post-processing now writes configured Associated Domains to
-    Unity-iPhone.entitlements.
-
-    - Documented the Apple App ID and provisioning
-    profile capability requirement.'
+    prebuild, and optional CustomSymbols/GPGS integration for Unity projects.
+  _releaseNote: "- `ActionFitBuildSetting_SO`\uB97C `BuildCompanySettingsSO`\uB85C
+    \uBC94\uC6A9\uD654\uD574 public \uD328\uD0A4\uC9C0\uC5D0\uC11C \uD68C\uC0AC \uACE0\uC815
+    \uC774\uB984\uC774 \uB178\uCD9C\uB418\uC9C0 \uC54A\uB3C4\uB85D \uC815\uB9AC\uD588\uC2B5\uB2C8\uB2E4.\n-
+    base `BuildSetting`\uC5D0\uC11C \uD2B9\uC815 \uD68C\uC0AC \uAE30\uBCF8 \uD504\uB85C\uD544
+    \uC790\uB3D9 \uC0DD\uC131\uC744 \uC81C\uAC70\uD558\uACE0, \uD68C\uC0AC \uD504\uB85C\uD544
+    \uAC12\uC740 \uC5F0\uACB0\uB41C `BuildCompanySettingsSO`\uC5D0 \uC788\uB294 \uAC12\uB9CC
+    \uC0AC\uC6A9\uD569\uB2C8\uB2E4.\n- \uAE30\uC874 `BuildSettingsSO.actionFitBuildSetting`
+    \uC9C1\uB82C\uD654 \uAC12\uC740 `companySettings`\uB85C \uC790\uB3D9 \uB9C8\uC774\uADF8\uB808\uC774\uC158\uB418\uB3C4\uB85D
+    `FormerlySerializedAs`\uC640 legacy asset path\uB97C \uC720\uC9C0\uD588\uC2B5\uB2C8\uB2E4.\n-
+    iOS `Associated Domains` \uB9AC\uC2A4\uD2B8\uC640 Xcode entitlements \uD6C4\uCC98\uB9AC
+    \uC9C0\uC6D0\uC740 `BuildSettingsSO` \uACF5\uC720 \uC124\uC815\uC73C\uB85C \uC720\uC9C0\uB429\uB2C8\uB2E4.\n-
+    Caution: \uD68C\uC0AC\uBCC4 \uAE30\uBCF8\uBA85/Team ID \uC790\uB3D9 \uC138\uD305\uC774
+    \uD544\uC694\uD55C \uD504\uB85C\uC81D\uD2B8\uB294 \uBCC4\uB3C4 private bootstrap
+    \uD328\uD0A4\uC9C0\uB97C \uD568\uAED8 \uC124\uCE58\uD574\uC57C \uD569\uB2C8\uB2E4."
   _dependenciesOverride: 

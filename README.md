@@ -7,7 +7,7 @@ Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSett
 ```json
 {
   "dependencies": {
-    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.5"
+    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.6"
   }
 }
 ```
@@ -17,10 +17,11 @@ Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSett
 - 설정 창 메뉴: `Tools > ActionFit > BuildSetting > SettingWindow`
 - 설정 SO 포커싱 메뉴: `Tools > ActionFit > BuildSetting > SO포커싱 기능`
 - 설정 에셋: `BuildSettingsSO`
-- 회사/Team ID 기본 세팅 에셋: `ActionFitBuildSetting_SO`
+- 회사/Team ID 프로필 세팅 에셋: `BuildCompanySettingsSO`
 - 패키지에는 설정 에셋을 저장하지 않습니다. 기존 `BuildSettingsSO`가 있으면 자동으로 찾아서 창 필드에 배정하고, 없으면 `Assets/_Data/_BuildSetting/BuildSettingsSO.asset`을 자동 생성합니다.
-- `ActionFitBuildSetting_SO`는 `Assets/_Data/_BuildSetting/ActionFitBuildSetting_SO.asset`에 자동 생성되며, 비어 있으면 `ActionFit / 49W7A8489P`, `Stormborn / MCTHBCST32` 회사 프로필을 자동 추가합니다.
-- `BuildSettingsSO`에서 `ActionFitBuildSetting_SO`를 드래그앤드롭으로 연결하고 `Company Profile`을 선택하면 `companyName`과 iOS `Development Team ID`가 함께 세팅됩니다.
+- `BuildCompanySettingsSO`는 `Assets/_Data/_BuildSetting/BuildCompanySettingsSO.asset`에 생성되며, public 패키지에서는 특정 회사 프로필을 자동 추가하지 않습니다.
+- `BuildSettingsSO`에서 `BuildCompanySettingsSO`를 드래그앤드롭으로 연결하고 `Company Profile`을 선택하면 `companyName`과 iOS `Development Team ID`가 함께 세팅됩니다.
+- 회사별 기본 프로필 자동 세팅은 별도 전용 bootstrap 패키지가 담당합니다.
 - 처음 자동 생성되는 `BuildSettingsSO`는 현재 프로젝트의 `PlayerSettings`에서 company name, product name, bundle version, Android/iOS application identifier, bundle number, iOS target OS version 같은 기본값을 1차 초기화로 가져옵니다.
 - iOS의 `Target iOS Version` 값은 Unity `PlayerSettings.iOS.targetOSVersionString`과 Xcode `IPHONEOS_DEPLOYMENT_TARGET`에 적용됩니다. 기본값은 기존 동작과 같은 `13.0`입니다.
 - iOS `Associated Domains`는 `BuildSettingsSO`의 리스트에 `applinks:actionfit.sng.link`처럼 입력합니다. iOS Xcode post process가 entitlements에 자동 반영하지만, Apple Developer Portal의 App ID와 provisioning profile에도 Associated Domains capability가 활성화되어 있어야 실제 서명/Universal Links가 동작합니다.
