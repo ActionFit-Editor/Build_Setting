@@ -7,7 +7,7 @@ This file is shipped inside the UPM package so an AI assistant in a consuming Un
 - Package ID: `com.actionfit.buildsetting`
 - Display name: Build Setting
 - Repository: `https://github.com/ActionFit-Editor/Build_Setting.git`
-- Current package version at generation time: `1.1.7`
+- Current package version at generation time: `1.1.8`
 - Unity version: `6000.2`
 
 ## Purpose
@@ -49,8 +49,8 @@ Read this file when:
 
 ## Menu And Behavior Notes
 
-- Setting window menu: `Tools/ActionFit/BuildSetting/SettingWindow`.
-- SO focus menu: `Tools/ActionFit/BuildSetting/SO포커싱 기능`.
+- Setting window menu: `Tools/Package/Build Setting/Setting Window`.
+- SO focus menu: `Tools/Package/Build Setting/Setting SO`.
 - This package stores Android/iOS build settings in `BuildSettingsSO`.
 - `BuildCompanySettingsSO` stores optional company profiles for `BuildSettingsSO`. It is created at `Assets/_Data/_BuildSetting/BuildCompanySettingsSO.asset`; the legacy `Assets/_Data/_BuildSetting/ActionFitBuildSetting_SO.asset` path is still read for migration.
 - `BuildSettingsSO.companySettings` is a drag-and-drop reference to that company profile SO. The serialized field uses `[FormerlySerializedAs("actionFitBuildSetting")]` so existing assets migrate. The SettingWindow exposes a `Company Profile` popup with `Custom / Add Company`, `Custom / Manual`, and stored company profiles. `Add Company` opens a small editor window that saves a new company name / Development Team ID pair into `BuildCompanySettingsSO`. Stored profile selection synchronizes `companyName` with `developmentTeamId` and hides manual company fields. `BuildSettingsSO.useManualCompanyProfile` stores whether `Custom / Manual` is selected; manual mode disables profile auto-sync so both company name and Development Team ID remain editable.
@@ -64,6 +64,15 @@ Read this file when:
 - Firebase config file lookup should search inside `Assets`.
 - Build Setting does not create automatic build requests by itself. BuildCommit, request JSON, Git tag CI triggers, workflow templates, and runner guidance live in `com.actionfit.buildautomation`.
 - Treat build tools as release workflow tools. Do not run build actions during normal content validation unless the task explicitly targets release/build behavior.
+
+## Package Tools Menu
+
+- Unity menu root: `Tools/Package/Build Setting/`.
+- Keep package commands under this package root.
+- Lower separated entries:
+- `Setting SO`: focuses this package's settings ScriptableObject.
+- `README`: opens this package README.
+- Do not add README or Setting SO access back to Custom Package Manager package rows or Project Files.
 
 ## Release Note Rules
 

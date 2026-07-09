@@ -272,14 +272,14 @@ namespace ActionFit.BuildSetting.Editor
 
         #region Window
 
-        [MenuItem("Tools/ActionFit/BuildSetting/SettingWindow", false, 20)]
+        [MenuItem("Tools/Package/Build Setting/Setting Window", false, 20)]
         public static void ShowWindow()
         {
             BuildSettingsWindow window = GetWindow<BuildSettingsWindow>("Build Settings");
             window.Show();
         }
 
-        [MenuItem("Tools/ActionFit/BuildSetting/SO포커싱 기능", false, 19)]
+        [MenuItem("Tools/Package/Build Setting/Setting SO", false, 900)]
         public static void FocusSettingsAsset()
         {
             var asset = BuildSettingsSO.FindOrCreateSettingsAsset();
