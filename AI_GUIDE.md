@@ -7,12 +7,18 @@ This file is shipped inside the UPM package so an AI assistant in a consuming Un
 - Package ID: `com.actionfit.buildsetting`
 - Display name: Build Setting
 - Repository: `https://github.com/ActionFit-Editor/Build_Setting.git`
-- Current package version at generation time: `1.1.9`
+- Current package version at generation time: `1.1.10`
 - Unity version: `6000.2`
 
 ## Purpose
 
 Build Setting manages generic Android/iOS build/player settings for Unity projects. Use `README.md`, `package.json`, package source files, and `Editor/PackageInfo/ActionFitPackageInfo_SO.asset` together to understand the user-facing workflow and catalog metadata.
+
+## Agent Skills
+
+- `Skills~/manifest.json` registers schema v2 read-only `build-settings-help` for Codex and Claude.
+- Help reads the generated `PACKAGE_SKILLS.md` inventory before explaining `BuildSettingsSO`, platform settings, company profiles, Addressables prebuild, optional integrations, credential safety, and Build Automation ownership.
+- Help must not open Unity windows, create or modify settings assets, apply `PlayerSettings`, start builds, read credential values, edit manifests or `.gitignore`, publish, tag, or update the package catalog.
 
 ## Project Router Registration
 

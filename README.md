@@ -7,10 +7,16 @@ Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSett
 ```json
 {
   "dependencies": {
-    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.9"
+    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.10"
   }
 }
 ```
+
+## Agent Skills
+
+Custom Package Manager의 `Install or Refresh Agent Skills`를 실행하면 Codex와 Claude에 read-only `build-settings-help`가 설치됩니다.
+
+이 스킬은 `BuildSettingsSO`, Android/iOS `PlayerSettings`, 회사 프로필, Addressables prebuild, 선택 연동과 Build Automation 경계를 설명합니다. Unity 창이나 빌드를 실행하고 설정 에셋, `PlayerSettings`, credential, manifest, `.gitignore`, 게시 상태를 변경하지 않습니다.
 
 ## Unity Menu
 

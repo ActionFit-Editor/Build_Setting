@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Settings Help"
+  short_description: "Explain Unity build settings and safe package use"
+  default_prompt: "Use $build-settings-help to explain ActionFit Build Setting configuration, menus, integration boundaries, and safety rules."

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "skillPrefix": "build-settings",
+  "helpSkill": "build-settings-help",
+  "skills": [
+    {
+      "name": "build-settings-help",
+      "agents": [
+        "codex",
+        "claude"
+      ],
+      "includeShared": false,
+      "access": "read-only"
+    }
+  ]
+}
