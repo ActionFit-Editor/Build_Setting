@@ -63,6 +63,7 @@ namespace ActionFit.BuildSetting.Editor
         public bool saveFileInProject = false; // 프로젝트 내 Builds 폴더에 저장
         public string buildVersion = "[Enter Build Version]"; // 빌드 버전
         public string bundleNo = "[Enter Bundle Number]"; // 번들 번호
+        public bool developmentBuild = false; // Unity Development Build 활성화
         public bool isDevMode = false; // 개발 모드
         public List<string> defineSymbol = new(); // 추가 심볼
         public bool manageSymbolsOnBuild = true; // 빌드 시 심볼 관리 (CustomSymbols 패키지 설치 시)
@@ -72,6 +73,14 @@ namespace ActionFit.BuildSetting.Editor
         public string buildCommitAppStoreConnectApiKeyId = ""; // BuildCommit App Store Connect API key ID override
         public string buildCommitAppStoreConnectIssuerId = ""; // BuildCommit App Store Connect issuer ID override
         [TextArea(3, 10)] public string buildCommitAppStoreConnectApiKeyP8 = ""; // BuildCommit App Store Connect private key override
+
+        /// <summary>
+        /// 기존 빌드 옵션을 보존하면서 Development Build 설정을 적용합니다.
+        /// </summary>
+        public BuildOptions ResolveBuildOptions(BuildOptions baseOptions)
+        {
+            return developmentBuild ? baseOptions | BuildOptions.Development : baseOptions;
+        }
 
 #if UNITY_EDITOR
         public static BuildSettingsSO FindSettingsAsset()
@@ -412,10 +421,9 @@ namespace ActionFit.BuildSetting.Editor
             DrawGpgsSettings();
             DrawKeyStoreSettings();
 #endif
+            DrawBuildOptions();
 #if ACTIONFIT_CUSTOM_SYMBOLS
             DrawSymbolManageOption();
-#else
-            DrawBuildOptions();
 #endif
 #if UNITY_IOS
             DrawiOSCapabilities();
@@ -748,8 +756,13 @@ namespace ActionFit.BuildSetting.Editor
             EditorGUILayout.Space(20);
             EditorGUILayout.LabelField("Build Options", EditorStyles.boldLabel);
 
+            EditorGUILayout.PropertyField(
+                _serializedSettings.FindProperty("developmentBuild"),
+                new GUIContent("Development Build", "Unity BuildOptions.Development를 실제 Player 빌드에 적용합니다."));
+#if !ACTIONFIT_CUSTOM_SYMBOLS
             EditorGUILayout.PropertyField(_serializedSettings.FindProperty("isDevMode"));
             EditorGUILayout.PropertyField(_serializedSettings.FindProperty("defineSymbol"));
+#endif
         }
 
 #if ACTIONFIT_CUSTOM_SYMBOLS

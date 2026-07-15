@@ -20,5 +20,10 @@ MonoBehaviour:
   _status: verified
   _description: Android/iOS PlayerSettings, build paths, versioning, signing, Addressables
     prebuild, and optional CustomSymbols/GPGS integration for Unity projects.
-  _releaseNote: "- schema v2 read-only `build-settings-help`를 Codex와 Claude에 등록해 `BuildSettingsSO`, Android/iOS `PlayerSettings`, 회사 프로필과 Addressables prebuild 구성을 안전하게 설명할 수 있습니다.\n- help는 설치 시 생성되는 `PACKAGE_SKILLS.md`를 권위 있는 스킬 목록으로 사용해 두 agent에서 동일한 진입점과 패키지 경계를 제공합니다.\n- 스킬은 Unity 창, 빌드, 설정 에셋과 `PlayerSettings`를 실행·변경하지 않고 credential 값을 읽거나 출력하지 않아 설명 요청이 프로젝트 상태를 바꾸지 않습니다.\n- 런타임·Editor API, 메뉴, serialized field, package dependency와 Build Automation 분리 경계는 변경하지 않아 기존 빌드 설정 동작이 유지됩니다."
+  _releaseNote: "- \uAE30\uBCF8 OFF\uC778 `Development Build` \uC124\uC815\uC744
+    `BuildSettingsSO`\uC640 \uC124\uC815 \uCC3D\uC5D0 \uCD94\uAC00\uD588\uC2B5\uB2C8\uB2E4.\n-
+    Android/iOS \uB85C\uCEEC \uBE4C\uB4DC\uAC00 \uAE30\uC874 \uBE4C\uB4DC \uC635\uC158\uC744
+    \uBCF4\uC874\uD558\uBA74\uC11C `BuildOptions.Development`\uB97C \uC801\uC6A9\uD569\uB2C8\uB2E4.\n-
+    Development Build\uC640 \uAE30\uC874 `DEV` scripting define \uC124\uC815\uC744
+    \uC11C\uB85C \uB3C5\uB9BD\uC801\uC73C\uB85C \uC720\uC9C0\uD569\uB2C8\uB2E4."
   _dependenciesOverride: 

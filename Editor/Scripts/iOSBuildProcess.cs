@@ -112,6 +112,8 @@ namespace ActionFit.BuildSetting.Editor
                 if (!Directory.Exists(fullBuildPath)) Directory.CreateDirectory(fullBuildPath);
             }
 
+            buildOptions = setting.ResolveBuildOptions(buildOptions);
+
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = EditorBuildSettings.scenes
@@ -127,7 +129,8 @@ namespace ActionFit.BuildSetting.Editor
             Debug.Log("[Build] Running Addressables BuildPlayerContent before Player build");
             AddressableAssetSettings.BuildPlayerContent();
 
-            Debug.Log($"Starting iOS build ({(buildOptions == BuildOptions.AcceptExternalModificationsToPlayer ? "Append" : "Replace")}) at: {buildPath}");
+            bool appendBuild = (buildOptions & BuildOptions.AcceptExternalModificationsToPlayer) != 0;
+            Debug.Log($"Starting iOS build: mode={(appendBuild ? "Append" : "Replace")}, path={buildPath}, developmentBuild={setting.developmentBuild}, options={buildOptions}");
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             BuildSummary summary = report.summary;
 

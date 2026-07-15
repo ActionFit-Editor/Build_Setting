@@ -7,7 +7,7 @@ This file is shipped inside the UPM package so an AI assistant in a consuming Un
 - Package ID: `com.actionfit.buildsetting`
 - Display name: Build Setting
 - Repository: `https://github.com/ActionFit-Editor/Build_Setting.git`
-- Current package version at generation time: `1.1.10`
+- Current package version at generation time: `1.1.11`
 - Unity version: `6000.2`
 
 ## Purpose
@@ -63,6 +63,7 @@ Read this file when:
 - This public base package must not hardcode company-specific profiles. Company-specific defaults belong in separate private bootstrap packages.
 - `BuildSettingsSO.iosTargetOSVersion` stores the iOS Deployment Target. The SettingWindow exposes it as `Target iOS Version`, applies it to `PlayerSettings.iOS.targetOSVersionString`, and iOS Xcode post-processing writes it to `IPHONEOS_DEPLOYMENT_TARGET`. The default remains `13.0` for existing behavior.
 - `BuildSettingsSO.associatedDomains` stores iOS Associated Domains entitlement entries such as `applinks:actionfit.sng.link`. The SettingWindow exposes it as a string list under iOS Capabilities, and iOS Xcode post-processing writes non-empty, trimmed, de-duplicated entries to the generated entitlements file. The Apple App ID and provisioning profile must also have the Associated Domains capability enabled.
+- `BuildSettingsSO.developmentBuild` is an independent, default-off build option. The SettingWindow always exposes it, including when Custom Symbols is installed. `AOSBuildProcess` and `iOSBuildProcess` OR `BuildOptions.Development` into the existing options so `AutoRunPlayer` and `AcceptExternalModificationsToPlayer` are preserved. Do not conflate it with the legacy `isDevMode` field or the `DEV` scripting define.
 - `BuildSettingsSO.FindOrCreateSettingsAsset()` should find the last-used or first project asset, and create `Assets/_Data/_BuildSetting/BuildSettingsSO.asset` only when none exists.
 - Do not add `Assets/_Data/_BuildSetting/BuildSettingsSO.asset` or its `.meta` file to a consuming project's `.gitignore`. BuildCommit CI starts from a clean checkout and requires this asset to exist, so both files must remain tracked in Git.
 - `BuildSettingsSO` can hold temporary BuildCommit credential overrides, but that is not a reason to ignore the entire asset. Keep credential override fields empty in committed assets and provide secrets through the Build Automation request or CI secret environment instead.

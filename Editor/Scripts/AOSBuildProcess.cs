@@ -134,6 +134,7 @@ public class AOSBuildProcess
 
         string fileName = $"{buildPrefix}{buildName}_v{version}({bundleCode}).{(aab ? "aab" : "apk")}";
         string buildFilePath = Path.Combine(buildPath, fileName);
+        buildOptions = setting.ResolveBuildOptions(buildOptions);
 
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
         {
@@ -152,7 +153,7 @@ public class AOSBuildProcess
         Debug.Log("[Build] Running Addressables BuildPlayerContent before Player build");
         AddressableAssetSettings.BuildPlayerContent();
 
-        Debug.Log($"Starting build at: {buildFilePath}");
+        Debug.Log($"Starting Android build: path={buildFilePath}, developmentBuild={setting.developmentBuild}, options={buildOptions}");
         BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
         BuildSummary summary = report.summary;
 
