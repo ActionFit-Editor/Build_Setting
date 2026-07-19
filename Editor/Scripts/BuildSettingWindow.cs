@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ActionFit.SOSingleton;
+using ActionFit.SOSingleton.Editor;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
@@ -15,7 +17,8 @@ using ProcessStartInfo = System.Diagnostics.ProcessStartInfo;
 namespace ActionFit.BuildSetting.Editor
 {
     [CreateAssetMenu(fileName = "BuildSettings", menuName = "Build/BuildSettings")]
-    public class BuildSettingsSO : ScriptableObject
+    [ActionFitSettingsAsset("BuildSetting", ActionFitSettingsAssetLifetime.EditorOnly)]
+    public class BuildSettingsSO : ScriptableObject, IActionFitSettingsAssetInitializer
     {
         #region Fields
 
@@ -88,37 +91,21 @@ namespace ActionFit.BuildSetting.Editor
             var saved = LoadAndRemember(EditorPrefs.GetString(SOPrefsKey, ""));
             if (saved != null) return saved;
 
-            var defaultSettings = LoadAndRemember(DefaultSettingsAssetPath);
-            if (defaultSettings != null) return defaultSettings;
-
-            string[] guids = AssetDatabase.FindAssets("t:BuildSettingsSO");
-            if (guids.Length == 0) return null;
-
-            string path = guids
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .OrderBy(p => p.StartsWith("Assets/", StringComparison.Ordinal) ? 0 : 1)
-                .ThenBy(p => p, StringComparer.Ordinal)
-                .FirstOrDefault();
-            return LoadAndRemember(path);
+            var result = ActionFitSettingsAssetProvider.Resolve(typeof(BuildSettingsSO), false);
+            return LoadAndRemember(result.ActualPath);
         }
 
         public static BuildSettingsSO FindOrCreateSettingsAsset()
         {
-            var settings = FindSettingsAsset();
-            if (settings != null) return settings;
+            var settings = ActionFitSettingsAssetProvider.GetOrCreate<BuildSettingsSO>();
+            return settings == null
+                ? null
+                : LoadAndRemember(AssetDatabase.GetAssetPath(settings));
+        }
 
-            EnsureFolder(Path.GetDirectoryName(DefaultSettingsAssetPath)?.Replace("\\", "/"));
-
-            settings = CreateInstance<BuildSettingsSO>();
-            settings.InitializeFromProjectSettings();
-            AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
-            EditorPrefs.SetString(SOPrefsKey, DefaultSettingsAssetPath);
-            EditorUtility.SetDirty(settings);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            Debug.Log($"[BuildSetting] BuildSettingsSO created: {DefaultSettingsAssetPath}");
-            return settings;
+        public void InitializeNewSettingsAsset()
+        {
+            InitializeFromProjectSettings();
         }
 
         public void InitializeFromProjectSettings()
@@ -238,17 +225,6 @@ namespace ActionFit.BuildSetting.Editor
                 }
             }
             return settings;
-        }
-
-        private static void EnsureFolder(string folder)
-        {
-            if (string.IsNullOrWhiteSpace(folder) || AssetDatabase.IsValidFolder(folder)) return;
-
-            string parent = Path.GetDirectoryName(folder)?.Replace("\\", "/");
-            if (!string.IsNullOrWhiteSpace(parent))
-                EnsureFolder(parent);
-
-            AssetDatabase.CreateFolder(parent, Path.GetFileName(folder));
         }
 
         private static string SanitizeFileName(string value)

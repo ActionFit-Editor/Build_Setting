@@ -2,12 +2,16 @@
 
 Android/iOS 빌드 설정을 `BuildSettingsSO`에 저장하고 Unity `PlayerSettings`와 실제 빌드 실행에 적용하는 에디터 패키지입니다.
 
+## 설정 SO 수명주기
+
+`BuildSettingsSO`와 `BuildCompanySettingsSO`는 `Assets/_Data/_BuildSetting/` 아래의 Editor 전용 설정으로 등록됩니다. 기존 asset, GUID, 직렬화 값은 보존하며 `ActionFitBuildSetting_SO.asset`도 company 설정의 legacy 후보로 재사용합니다. 새 `BuildSettingsSO`를 처음 만들 때만 현재 프로젝트의 안전한 기본값을 채웁니다.
+
 ## 설치
 
 ```json
 {
   "dependencies": {
-    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.12"
+    "com.actionfit.buildsetting": "https://github.com/ActionFit-Editor/Build_Setting.git#1.1.13"
   }
 }
 ```

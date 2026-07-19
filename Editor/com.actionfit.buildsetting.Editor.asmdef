@@ -2,7 +2,9 @@
     "name": "com.actionfit.buildsetting.Editor",
     "rootNamespace": "ActionFit.BuildSetting.Editor",
     "references": [
-        "Unity.Addressables.Editor"
+        "Unity.Addressables.Editor",
+        "com.actionfit.sosingleton",
+        "com.actionfit.sosingleton.Editor"
     ],
     "includePlatforms": [
         "Editor"

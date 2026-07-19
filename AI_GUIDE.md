@@ -7,10 +7,16 @@ This file is shipped inside the UPM package so an AI assistant in a consuming Un
 - Package ID: `com.actionfit.buildsetting`
 - Display name: Build Setting
 - Repository: `https://github.com/ActionFit-Editor/Build_Setting.git`
-- Current package version at generation time: `1.1.12`
+- Current package version at generation time: `1.1.13`
 - Unity version: `6000.2`
 
 ## Purpose
+
+### Settings SO Lifecycle
+
+- `BuildSettingsSO` and `BuildCompanySettingsSO` are registered as `EditorOnly` under `Assets/_Data/_BuildSetting/`.
+- `Assets/_Data/_BuildSetting/ActionFitBuildSetting_SO.asset` remains a legacy candidate for `BuildCompanySettingsSO`; no existing settings asset is moved or reserialized.
+- New `BuildSettingsSO` assets initialize from safe project settings and link the company settings through the existing APIs. Existing serialized values remain authoritative.
 
 Build Setting manages generic Android/iOS build/player settings for Unity projects. Use `README.md`, `package.json`, package source files, and `Editor/PackageInfo/ActionFitPackageInfo_SO.asset` together to understand the user-facing workflow and catalog metadata.
 

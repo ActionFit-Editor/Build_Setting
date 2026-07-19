@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using UnityEditor;
+using ActionFit.SOSingleton;
+using ActionFit.SOSingleton.Editor;
 using UnityEngine;
 
 namespace ActionFit.BuildSetting.Editor
@@ -17,6 +17,13 @@ namespace ActionFit.BuildSetting.Editor
     }
 
     [CreateAssetMenu(fileName = "BuildCompanySettingsSO", menuName = "Build/BuildCompanySettings")]
+    [ActionFitSettingsAsset(
+        "BuildSetting",
+        ActionFitSettingsAssetLifetime.EditorOnly,
+        LegacyPaths = new string[]
+        {
+            "Assets/_Data/_BuildSetting/ActionFitBuildSetting_SO.asset"
+        })]
     public class BuildCompanySettingsSO : ScriptableObject
     {
         #region Fields
@@ -91,40 +98,12 @@ namespace ActionFit.BuildSetting.Editor
 
         public static BuildCompanySettingsSO FindOrCreateSettingsAsset()
         {
-            var settings = LoadSettingsAsset();
-            if (settings == null)
-            {
-                EnsureFolder(Path.GetDirectoryName(DefaultSettingsAssetPath)?.Replace("\\", "/"));
-                settings = CreateInstance<BuildCompanySettingsSO>();
-                AssetDatabase.CreateAsset(settings, DefaultSettingsAssetPath);
-                Debug.Log($"[BuildCompanySettings] Settings created: {DefaultSettingsAssetPath}");
-            }
-
-            return settings;
+            return ActionFitSettingsAssetProvider.GetOrCreate<BuildCompanySettingsSO>();
         }
 
         #endregion
 
         #region Private Methods
-
-        private static BuildCompanySettingsSO LoadSettingsAsset()
-        {
-            var settings = AssetDatabase.LoadAssetAtPath<BuildCompanySettingsSO>(DefaultSettingsAssetPath);
-            return settings != null
-                ? settings
-                : AssetDatabase.LoadAssetAtPath<BuildCompanySettingsSO>(LegacySettingsAssetPath);
-        }
-
-        private static void EnsureFolder(string folder)
-        {
-            if (string.IsNullOrWhiteSpace(folder) || AssetDatabase.IsValidFolder(folder)) return;
-
-            string parent = Path.GetDirectoryName(folder)?.Replace("\\", "/");
-            if (!string.IsNullOrWhiteSpace(parent))
-                EnsureFolder(parent);
-
-            AssetDatabase.CreateFolder(parent, Path.GetFileName(folder));
-        }
 
         #endregion
     }
